@@ -1,5 +1,7 @@
 github.com/adampresley/configinator v1.2.0 h1:Ma+unlbMpTgMpkOHlz7lf/sq6lCAm2WzDWJEIIe6v6Q=
 github.com/adampresley/configinator v1.2.0/go.mod h1:QyLBdb7smhnydySp/7niGb6zWoABREd2FZyvHeqyjTM=
+github.com/adampresley/httphelpers v1.0.0 h1:igP8sN01ZyK8yGvxYIc5OI2OiGud2AbKmRpyr4uDY9g=
+github.com/adampresley/httphelpers v1.0.0/go.mod h1:sCsGVR/0Bdpniz6XEFSIJ/LHS3tgVLr+bm7b7NnpNAM=
 github.com/adampresley/mux v1.0.0 h1:eXUiOafEsMqkUKvO9+DH9FVYJM5Kiqri7LfIHAsNi1g=
 github.com/adampresley/mux v1.0.0/go.mod h1:6tEN2tqstdjehwTMFO6wETNXyaFTbrfu0fyg0FeCfBk=
 github.com/adampresley/rendering v1.0.0 h1:00y1jQSkS8kII9Pyrkz02OYRoW9SZYanCZPtvhrfEB4=

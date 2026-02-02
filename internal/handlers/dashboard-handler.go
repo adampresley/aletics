@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/adampresley/aletics/internal/configuration"
+	"github.com/adampresley/aletics/internal/viewdata"
+	"github.com/adampresley/httphelpers/requests"
 	"github.com/adampresley/rendering"
 )
 
@@ -26,5 +28,13 @@ func NewDashboardHandler(config DashboardHandlerConfig) DashboardHandler {
 
 func (h DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request) {
 	pageName := "pages/dashboard"
-	h.renderer.Render(pageName, nil, w)
+
+	viewData := viewdata.Dashboard{
+		BaseViewModel: rendering.BaseViewModel{
+			IsHtmx: requests.IsHtmx(r),
+		},
+		ExampleData: "",
+	}
+
+	h.renderer.Render(pageName, viewData, w)
 }
