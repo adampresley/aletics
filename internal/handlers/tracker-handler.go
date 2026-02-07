@@ -45,9 +45,11 @@ func (h *TrackerHandler) TrackEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newEvent.Origin = r.Header.Get("Origin")
+
 	if event, err = h.trackerService.TrackEvent(newEvent); err != nil {
 		slog.Error("error tracking tracker event", "error", err)
-		responses.TextInternalServerError(w, "Error tracking tracker event")
+		responses.TextInternalServerError(w, "Error writing tracker event")
 		return
 	}
 

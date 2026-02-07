@@ -3,8 +3,9 @@
       return;
    }
 
-   function assemble() {
+   function assemble(token) {
       return {
+         token: token,
          path: window.location.pathname,
          queryString: window.location.search,
          browser: getBrowserName(),
@@ -22,16 +23,17 @@
       return "Unknown";
    }
 
-   function newTracker(baseUrl) {
+   function newTracker(baseUrl, token) {
       const t = {
          track: () => {
-            const payload = assemble();
+            const payload = assemble(token);
             const data = JSON.stringify(payload);
+            const endpoint = `${baseUrl}/v1/track`.replace(/([^:]\/)\/+/g, "$1");
 
             if (navigator.sendBeacon) {
-               navigator.sendBeacon(`${baseUrl}/v1/track`, data);
+               navigator.sendBeacon(endpoint, data);
             } else {
-               fetch(`${baseUrl}/v1/track`, {
+               fetch(endpoint, {
                   method: "POST",
                   "Content-Type": "text/plain;charset=UTF-8",
                   body: data,
@@ -45,8 +47,8 @@
    }
 
    const Aletics = {
-      init: (baseUrl) => {
-         return newTracker(baseUrl);
+      init: (baseUrl, token) => {
+         return newTracker(baseUrl, token);
       },
    };
 
@@ -59,7 +61,8 @@ Usage:
 <script id="aletics-script" src="https://<tld>/aletics/v1/tracker.js" async defer></script>
 <script>
    document.querySelector("#aletics-script").onload = () => {
-      (Aletics.init("http://localhost:3000/aletics")).track();
+      (Aletics.init("https://<tld>/aletics", "<property token>")).track();
    };
 </script>
+
 */
