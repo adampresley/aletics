@@ -1,0 +1,54 @@
+{{if .IsHtmx}}
+{{template "layouts/no-layout" .}}
+{{else}}
+{{template "layouts/main-layout" .}}
+{{end}}
+{{define "title"}}Properties{{end}}
+{{define "content"}}
+
+{{if not .IsHtmx}}
+<h2>Properties</h2>
+
+<div role="group">
+   <a href="/properties/create" role="button">Create Property</a>
+</div>
+
+<form>
+   <input type="search" id="name" name="name" placeholder="Search by name..." hx-get="/properties"
+      hx-trigger="keyup changed delay:300ms" hx-target="#property-list" autocomplete="on" />
+</form>
+
+<div id="property-list">
+   {{end}}
+   {{template "property-list-partial" .}}
+   {{if not .IsHtmx}}
+</div>
+{{end}}
+
+{{end}}
+
+{{define "property-list-partial"}}
+<table>
+   <thead>
+      <tr>
+         <th style="width: 40%">Name</th>
+         <th style="width: 40%">Domain</th>
+         <th style="width: 20%"></th>
+      </tr>
+   </thead>
+
+   <tbody>
+      {{range .Properties}}
+      <tr>
+         <td>{{.Name}}</td>
+         <td>{{.Domain}}</td>
+         <td>
+            <a href="/properties/edit/{{.ID}}" role="button">Edit</a>
+            <a href="#" role="button" hx-delete="/properties/delete/{{.ID}}" hx-target="#property-list"
+               hx-swap="beforeend" hx-confirm="Are you sure you wish to delete this?">Delete</a>
+         </td>
+      </tr>
+      {{end}}
+   </tbody>
+</table>
+{{end}}

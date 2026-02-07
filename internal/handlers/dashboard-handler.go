@@ -6,6 +6,7 @@ import (
 	"github.com/adampresley/aletics/internal/configuration"
 	"github.com/adampresley/aletics/internal/viewdata"
 	"github.com/adampresley/httphelpers/requests"
+	"github.com/adampresley/httphelpers/responses"
 	"github.com/adampresley/rendering"
 )
 
@@ -34,6 +35,11 @@ func (h DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request) 
 			IsHtmx: requests.IsHtmx(r),
 		},
 		ExampleData: "",
+	}
+
+	if r.URL.Path != "/" {
+		responses.Text(w, http.StatusNotFound, "Not Found")
+		return
 	}
 
 	h.renderer.Render(pageName, viewData, w)

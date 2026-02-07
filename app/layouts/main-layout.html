@@ -7,35 +7,42 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
    <meta name="color-scheme" content="light dark" />
    <title>{{template "title" .}}</title>
-   <link type="text/css" rel="stylesheet" media="screen" href="/static/css/frameui.css" />
+   <link type="text/css" rel="stylesheet" media="screen" href="/static/css/pico.css" />
 
    <script src="/static/js/libraries/htmx.min.js"></script>
+   <script src="/static/js/libraries/sweetalert2.all.min.js"></script>
+   <script src="/static/js/pages/main-layout.js" type="module"></script>
 </head>
 
 <body>
-   <header class="grid top-header">
+   <header class="container">
       <nav>
          <ul>
             <li>
-               <h1>
-                  <a href="/">Aletics</a>
-               </h1>
+               <hgroup>
+                  <h1><a href="/">Aletics</a></h1>
+                  <p>Free, simple analytics</p>
+               </hgroup>
             </li>
          </ul>
+
          <ul>
+            <li><a href="/properties">Manage Properties</a></li>
             <li><a href="/logout">Logout</a></li>
          </ul>
       </nav>
    </header>
    <!-- END NAV -->
 
-   <main id="mainContent" class="container-fluid">
+   <main class="container">
       {{template "content" .}}
    </main>
 
-   <footer id="page-footer">
-      <p>&copy; 2026</p>
+   <footer class="container">
+      <p>&copy; 2026 Adam Presley</p>
    </footer>
+
+   {{javascriptIncludes "JavascriptIncludes" .}}
 </body>
 
 </html>

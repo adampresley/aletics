@@ -1,0 +1,27 @@
+{{template "layouts/main-layout" .}}
+{{define "title"}}Edit Property{{end}}
+{{define "content"}}
+<h2>Edit Property</h2>
+
+<form action="/properties/edit/{{.Property.ID}}" method="POST">
+   <fieldset>
+      <label>
+         Name
+         <input type="text" id="name" name="name" placeholder="Enter the name of your website/application"
+            value="{{.Property.Name}}" required autofocus />
+      </label>
+
+      <label>
+         Domain
+         <input type="text" id="domain" name="domain" placeholder="mysite.com" value="{{.Property.Domain}}" required />
+      </label>
+
+      <label>
+         <input type="checkbox" id="active" name="active" value="true" {{if .Property.Active}}checked{{end}} />
+         Active
+      </label>
+   </fieldset>
+
+   <input type="submit" value="Save Changes" />
+</form>
+{{end}}

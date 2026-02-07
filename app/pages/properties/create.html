@@ -1,0 +1,23 @@
+{{template "layouts/main-layout" .}}
+{{define "title"}}Create Property{{end}}
+{{define "content"}}
+
+<h2>Create Property</h2>
+
+<form action="/properties/create" method="POST">
+   <fieldset>
+      <label>
+         Name
+         <input type="text" id="name" name="name" placeholder="Enter the name of your website/application"
+            value="{{.Property.Name}}" required autofocus />
+      </label>
+
+      <label>
+         Domain
+         <input type="text" id="domain" name="domain" placeholder="mysite.com" value="{{.Property.Domain}}" required />
+      </label>
+   </fieldset>
+
+   <input type="submit" value="Create" />
+</form>
+{{end}}

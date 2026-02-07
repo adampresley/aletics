@@ -52,4 +52,10 @@ func (h ExampleHandler) ExamplePage(w http.ResponseWriter, r *http.Request) {
    - Links should not use HTMX. They should load a new page (route)
    - Interactions on a given page, like a form post, searching a table, etc... should use HTMX 
    - You should use `requests.IsHtmx(r)` to determine if a given request came from HTMX in a handler. Each view data will compose `rendering.BaseViewModel`, which has a field named `IsHtmx`, which can be used in HTML templates. This will allow you to determine how to render.
+- Database models live in `internal/models`
+- Services that perform logic, interact with a database or api, live in `internal/services`
+- Handlers live in `internal/handlers`
+- View data structures live in `internal/viewdata`
+- All file names must be lower-hypen case.
+- This application uses GORM (> 1.30) for ORM and database interactions. This version supports generics. You must use the generics interface. See https://gorm.io/docs/ for more information. 
 
