@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"embed"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/adampresley/aletics/internal/configuration"
 	"github.com/adampresley/aletics/internal/handlers"
@@ -14,6 +16,9 @@ import (
 	"github.com/adampresley/aletics/internal/services"
 	"github.com/adampresley/mux"
 	"github.com/adampresley/rendering"
+	"github.com/adampresley/rester/clientoptions"
+	"github.com/jellydator/ttlcache/v3"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -35,8 +40,15 @@ var (
 
 func main() {
 	var (
-		err error
+		err     error
+		dialect gorm.Dialector
 	)
+
+	/* TEMP */
+	entries, _ := appFS.ReadDir("app")
+
+	fmt.Printf("%+v\n\n", entries)
+	/* TEMP */
 
 	config := configuration.LoadConfig()
 	setupLogging(&config)
@@ -45,7 +57,15 @@ func main() {
 	/*
 	 * Database
 	 */
-	if db, err = gorm.Open(sqlite.Open(config.DSN), &gorm.Config{}); err != nil {
+	if strings.HasPrefix(config.DSN, "file:") {
+		dialect = sqlite.Open(config.DSN)
+	} else if strings.HasPrefix(config.DSN, "postgres:") {
+		dialect = postgres.Open(config.DSN)
+	} else {
+		panic("Unsupported database dialect")
+	}
+
+	if db, err = gorm.Open(dialect, &gorm.Config{}); err != nil {
 		slog.Error("error connecting to database", "error", err)
 		os.Exit(1)
 	}
@@ -63,6 +83,12 @@ func main() {
 	/*
 	 * Services
 	 */
+	ipCache := ttlcache.New(
+		ttlcache.WithTTL[string, *models.CountryLookup](12 * time.Hour),
+	)
+
+	go ipCache.Start()
+
 	propertyService := services.NewPropertyService(services.PropertyServiceConfig{
 		DB: db,
 	})
@@ -70,8 +96,20 @@ func main() {
 	trackerService := services.NewTrackerService(services.TrackerServiceConfig{
 		DB: db,
 	})
+
 	reportService := services.NewReportService(services.ReportServiceConfig{
 		DB: db,
+	})
+
+	restConfig := clientoptions.New(
+		services.MaxmindBaseUrl,
+		clientoptions.WithBasicAuth(config.MaxmindAccountID, config.MaxmindApiKey),
+	)
+
+	ipLookupService := services.NewIpLookupService(services.IpLookupServiceConfig{
+		ApiAccountId: config.MaxmindAccountID,
+		ApiKey:       config.MaxmindApiKey,
+		RestConfig:   restConfig,
 	})
 
 	/*
@@ -89,7 +127,9 @@ func main() {
 	})
 
 	trackerHandler = handlers.NewTrackerHandler(handlers.TrackerHandlerConfig{
-		TrackerService: trackerService,
+		IpCache:         ipCache,
+		IpLookupService: ipLookupService,
+		TrackerService:  trackerService,
 	})
 
 	userScriptsHandler = handlers.NewUserScriptsHandler(handlers.UserScriptsHandlerConfig{
@@ -117,7 +157,7 @@ func main() {
 		stopApp,
 
 		mux.WithStaticContent("app", "/static/", appFS),
-		mux.WithDebug(true),
+		mux.WithDebug(Version == "development"),
 		mux.WithMiddlewares(
 			func(h http.Handler) http.Handler {
 				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

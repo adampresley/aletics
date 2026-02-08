@@ -64,10 +64,14 @@ func (s *TrackerService) TrackEvent(newEvent models.NewEvent) (*models.Event, er
 	queryString = strings.TrimPrefix(queryString, "?")
 
 	event := &models.Event{
-		PropertyID:  property.ID,
-		Path:        newEvent.Path,
-		QueryString: queryString,
-		Browser:     newEvent.Browser,
+		PropertyID:    property.ID,
+		Path:          newEvent.Path,
+		QueryString:   queryString,
+		Browser:       newEvent.Browser,
+		Country:       newEvent.Country,
+		CountryCode:   newEvent.CountryCode,
+		Continent:     newEvent.Continent,
+		ContinentCode: newEvent.ContinentCode,
 	}
 
 	err = s.db.Create(event).Error
