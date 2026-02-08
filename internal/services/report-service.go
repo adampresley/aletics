@@ -120,3 +120,26 @@ func (s *ReportService) GetBrowserCounts(propertyID uint, start, end time.Time) 
 
 	return results, nil
 }
+
+// GetCountryCounts returns the number of views per country for a property within a given time range.
+func (s *ReportService) GetCountryCounts(propertyID uint, start, end time.Time) ([]models.CountryCountItem, error) {
+	var (
+		err     error
+		results []models.CountryCountItem
+	)
+
+	err = s.db.
+		Model(&models.Event{}).
+		Select("country, COUNT(*) as count").
+		Where("property_id = ?", propertyID).
+		Where("created_at BETWEEN ? AND ?", start, end).
+		Group("country").
+		Order("count DESC").
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}

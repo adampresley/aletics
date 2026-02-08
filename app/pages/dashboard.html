@@ -81,6 +81,26 @@
             </tbody>
          </table>
       </article>
+
+      <article>
+         <h4>Views by Country</h4>
+         <table>
+            <thead>
+               <tr>
+                  <th>Country</th>
+                  <th>Views</th>
+               </tr>
+            </thead>
+            <tbody>
+               {{range .CountryCounts}}
+               <tr>
+                  <td>{{.Country}}</td>
+                  <td>{{.Count}}</td>
+               </tr>
+               {{end}}
+            </tbody>
+         </table>
+      </article>
    </div>
 
    <script src="/static/js/pages/dashboard.js" type="module"></script>

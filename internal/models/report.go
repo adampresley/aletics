@@ -23,3 +23,9 @@ type BrowserCountItem struct {
 	Browser string `json:"browser"`
 	Count   int    `json:"count"`
 }
+
+// CountryCountItem holds the count of views for a specific country.
+type CountryCountItem struct {
+	Country string `json:"country"`
+	Count   int    `json:"count"`
+}

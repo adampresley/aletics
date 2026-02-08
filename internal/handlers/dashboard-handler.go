@@ -196,6 +196,10 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 		if viewData.BrowserCounts, err = h.reportService.GetBrowserCounts(selectedPropertyID, start, end); err != nil {
 			slog.Error("error getting browser counts", "error", err)
 		}
+
+		if viewData.CountryCounts, err = h.reportService.GetCountryCounts(selectedPropertyID, start, end); err != nil {
+			slog.Error("error getting country counts", "error", err)
+		}
 	}
 
 	/*

@@ -19,6 +19,7 @@ type Dashboard struct {
 	ViewsOverTime []models.ViewsOverTimeItem
 	TopPaths      []models.TopPathItem
 	BrowserCounts []models.BrowserCountItem
+	CountryCounts []models.CountryCountItem
 
 	// Data formatted for Chart.js, must be template.JS to be safe
 	ViewsOverTimeLabelsJSON template.JS
