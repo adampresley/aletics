@@ -27,7 +27,7 @@ var (
 	db       *gorm.DB
 	renderer rendering.TemplateRenderer
 
-	dashboardHandler   handlers.DashboardHandler
+	dashboardHandler   *handlers.DashboardHandler
 	propertyHandler    *handlers.PropertyHandler
 	trackerHandler     *handlers.TrackerHandler
 	userScriptsHandler *handlers.UserScriptsHandler
@@ -70,13 +70,17 @@ func main() {
 	trackerService := services.NewTrackerService(services.TrackerServiceConfig{
 		DB: db,
 	})
+	reportService := services.NewReportService(services.ReportServiceConfig{
+		DB: db,
+	})
 
 	/*
 	 * Handlers
 	 */
 	dashboardHandler = handlers.NewDashboardHandler(handlers.DashboardHandlerConfig{
-		Config:   &config,
-		Renderer: renderer,
+		PropertyService: propertyService,
+		ReportService:   reportService,
+		Renderer:        renderer,
 	})
 
 	propertyHandler = handlers.NewPropertyHandler(handlers.PropertyHandlerConfig{
@@ -114,6 +118,14 @@ func main() {
 
 		mux.WithStaticContent("app", "/static/", appFS),
 		mux.WithDebug(true),
+		mux.WithMiddlewares(
+			func(h http.Handler) http.Handler {
+				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					slog.Info("request", "method", r.Method, "path", r.URL.Path)
+					h.ServeHTTP(w, r)
+				})
+			},
+		),
 	)
 
 	muxer.Start()

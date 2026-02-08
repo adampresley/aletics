@@ -1,9 +1,26 @@
 package viewdata
 
-import "github.com/adampresley/rendering"
+import (
+	"html/template"
+
+	"github.com/adampresley/aletics/internal/models"
+	"github.com/adampresley/rendering"
+)
 
 type Dashboard struct {
 	rendering.BaseViewModel
 
-	ExampleData string
+	// Fields for filter controls
+	Properties         []models.Property
+	SelectedPropertyID uint
+	SelectedTimeRange  string
+
+	// Report data
+	ViewsOverTime []models.ViewsOverTimeItem
+	TopPaths      []models.TopPathItem
+	BrowserCounts []models.BrowserCountItem
+
+	// Data formatted for Chart.js, must be template.JS to be safe
+	ViewsOverTimeLabelsJSON template.JS
+	ViewsOverTimeDataJSON   template.JS
 }
