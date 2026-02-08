@@ -14,6 +14,7 @@ type Config struct {
 	MaxmindAccountID string `flag:"maxmind-account-id" env:"MAXMIND_ACCOUNT_ID" default:"" description:"MaxMind API account ID"`
 	MaxmindApiKey    string `flag:"maxmind-api-key" env:"MAXMIND_API_KEY" default:"" description:"MaxMind API key"`
 	PageSize         int    `flag:"pagesize" env:"PAGE_SIZE" default:"10" description:"The number of items to display per page"`
+	TLD              string `flag:"tld" env:"TLD" default:"localhost:3000" description:"Top-level domain for this server"`
 }
 
 func LoadConfig() Config {

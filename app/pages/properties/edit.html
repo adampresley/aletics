@@ -20,6 +20,10 @@
          <input type="checkbox" id="active" name="active" value="true" {{if .Property.Active}}checked{{end}} />
          Active
       </label>
+
+      <label>
+         Tracker Script:
+         <textarea id="trackerScript" name="trackerScript" rows="8" cols="80" readonly>{{.TrackerScript}}</textarea>
    </fieldset>
 
    <input type="submit" value="Save Changes" />

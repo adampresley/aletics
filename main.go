@@ -124,6 +124,7 @@ func main() {
 	propertyHandler = handlers.NewPropertyHandler(handlers.PropertyHandlerConfig{
 		PropertyService: propertyService,
 		Renderer:        renderer,
+		TLD:             config.TLD,
 	})
 
 	trackerHandler = handlers.NewTrackerHandler(handlers.TrackerHandlerConfig{

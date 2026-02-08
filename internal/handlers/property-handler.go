@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"fmt"
+	"html/template"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/adampresley/aletics/internal/models"
 	"github.com/adampresley/aletics/internal/services"
@@ -14,17 +17,20 @@ import (
 type PropertyHandler struct {
 	propertyService *services.PropertyService
 	renderer        rendering.TemplateRenderer
+	tld             string
 }
 
 type PropertyHandlerConfig struct {
 	PropertyService *services.PropertyService
 	Renderer        rendering.TemplateRenderer
+	TLD             string
 }
 
 func NewPropertyHandler(config PropertyHandlerConfig) *PropertyHandler {
 	return &PropertyHandler{
 		propertyService: config.PropertyService,
 		renderer:        config.Renderer,
+		tld:             config.TLD,
 	}
 }
 
@@ -108,12 +114,7 @@ func (h *PropertyHandler) CreatePropertyAction(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// if viewData.IsHtmx {
-	// 	w.Header().Set("HX-Redirect", "/properties")
-	// 	w.WriteHeader(http.StatusOK)
-	// } else {
 	http.Redirect(w, r, "/properties", http.StatusSeeOther)
-	// }
 }
 
 func (h *PropertyHandler) EditPropertyPage(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +128,8 @@ func (h *PropertyHandler) EditPropertyPage(w http.ResponseWriter, r *http.Reques
 		BaseViewModel: rendering.BaseViewModel{
 			IsHtmx: requests.IsHtmx(r),
 		},
-		Property: models.Property{},
+		Property:      models.Property{},
+		TrackerScript: "",
 	}
 
 	id := requests.Get[uint](r, "id")
@@ -141,6 +143,7 @@ func (h *PropertyHandler) EditPropertyPage(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	viewData.TrackerScript = h.generateTrackerScript(viewData.Property.Token)
 	h.renderer.Render(pageName, viewData, w)
 }
 
@@ -191,4 +194,25 @@ func (h *PropertyHandler) DeleteProperty(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("HX-Redirect", "/properties")
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *PropertyHandler) generateTrackerScript(token string) template.JS {
+	nonSslTlds := []string{"localhost", "127.0.0.1", "::1"}
+	protocol := "https"
+
+	for _, tld := range nonSslTlds {
+		if strings.Contains(h.tld, tld) {
+			protocol = "http"
+			break
+		}
+	}
+
+	code := `<script id="aletics-script" src="%s://%s/aletics/v1/tracker.js" async defer></script>
+<script>
+   document.querySelector("#aletics-script").onload = () => {
+      (Aletics.init("%s://%s/aletics", "%s")).track();
+   };
+</script>`
+
+	return template.JS(fmt.Sprintf(code, protocol, h.tld, protocol, h.tld, token))
 }

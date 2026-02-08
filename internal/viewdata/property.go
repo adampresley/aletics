@@ -1,6 +1,8 @@
 package viewdata
 
 import (
+	"html/template"
+
 	"github.com/adampresley/aletics/internal/models"
 	"github.com/adampresley/rendering"
 )
@@ -19,4 +21,5 @@ type CreateProperty struct {
 type EditProperty struct {
 	rendering.BaseViewModel
 	models.Property
+	TrackerScript template.JS
 }
