@@ -54,7 +54,7 @@ func main() {
 	 */
 	if strings.HasPrefix(config.DSN, "file:") {
 		dialect = sqlite.Open(config.DSN)
-	} else if strings.HasPrefix(config.DSN, "postgres:") {
+	} else if strings.HasPrefix(config.DSN, "postgres:") || strings.HasPrefix(config.DSN, "postgresql:") {
 		dialect = postgres.Open(config.DSN)
 	} else {
 		panic("Unsupported database dialect")
