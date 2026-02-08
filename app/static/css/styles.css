@@ -1,0 +1,6 @@
+article {
+   &.error {
+      background-color: #7e0000;
+      color: white;
+   }
+}

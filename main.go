@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"embed"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -17,6 +16,7 @@ import (
 	"github.com/adampresley/mux"
 	"github.com/adampresley/rendering"
 	"github.com/adampresley/rester/clientoptions"
+	"github.com/gorilla/sessions"
 	"github.com/jellydator/ttlcache/v3"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -31,6 +31,7 @@ var (
 
 	db       *gorm.DB
 	renderer rendering.TemplateRenderer
+	store    *sessions.CookieStore
 
 	dashboardHandler   *handlers.DashboardHandler
 	propertyHandler    *handlers.PropertyHandler
@@ -43,12 +44,6 @@ func main() {
 		err     error
 		dialect gorm.Dialector
 	)
-
-	/* TEMP */
-	entries, _ := appFS.ReadDir("app")
-
-	fmt.Printf("%+v\n\n", entries)
-	/* TEMP */
 
 	config := configuration.LoadConfig()
 	setupLogging(&config)
@@ -79,6 +74,8 @@ func main() {
 	if renderer, err = rendering.NewGoTemplateRenderer(appFS); err != nil {
 		panic(err)
 	}
+
+	store = sessions.NewCookieStore([]byte(config.CookieSecret))
 
 	/*
 	 * Services
@@ -119,6 +116,8 @@ func main() {
 		PropertyService: propertyService,
 		ReportService:   reportService,
 		Renderer:        renderer,
+		ServerPassword:  config.ServerPassword,
+		Store:           store,
 	})
 
 	propertyHandler = handlers.NewPropertyHandler(handlers.PropertyHandlerConfig{
@@ -138,17 +137,19 @@ func main() {
 	})
 
 	routes := []mux.Route{
-		{Path: "/", HandlerFunc: dashboardHandler.DashboardPage},
-
 		{Path: "GET /aletics/v1/tracker.js", HandlerFunc: userScriptsHandler.TrackerScript, Middlewares: []mux.MiddlewareFunc{trackerCorsMiddleware}},
 		{Path: "POST /aletics/v1/track", HandlerFunc: trackerHandler.TrackEvent, Middlewares: []mux.MiddlewareFunc{trackerCorsMiddleware}},
 
-		{Path: "GET /properties", HandlerFunc: propertyHandler.ManagePropertiesPage},
-		{Path: "GET /properties/create", HandlerFunc: propertyHandler.CreatePropertyPage},
-		{Path: "POST /properties/create", HandlerFunc: propertyHandler.CreatePropertyAction},
-		{Path: "GET /properties/edit/{id}", HandlerFunc: propertyHandler.EditPropertyPage},
-		{Path: "POST /properties/edit/{id}", HandlerFunc: propertyHandler.EditPropertyAction},
-		{Path: "DELETE /properties/delete/{id}", HandlerFunc: propertyHandler.DeleteProperty},
+		{Path: "/", HandlerFunc: dashboardHandler.DashboardPage, Middlewares: []mux.MiddlewareFunc{authMiddleware}},
+		{Path: "GET /login", HandlerFunc: dashboardHandler.LoginPage},
+		{Path: "POST /login", HandlerFunc: dashboardHandler.LoginAction},
+		{Path: "GET /logout", HandlerFunc: dashboardHandler.LogoutAction},
+		{Path: "GET /properties", HandlerFunc: propertyHandler.ManagePropertiesPage, Middlewares: []mux.MiddlewareFunc{authMiddleware}},
+		{Path: "GET /properties/create", HandlerFunc: propertyHandler.CreatePropertyPage, Middlewares: []mux.MiddlewareFunc{authMiddleware}},
+		{Path: "POST /properties/create", HandlerFunc: propertyHandler.CreatePropertyAction, Middlewares: []mux.MiddlewareFunc{authMiddleware}},
+		{Path: "GET /properties/edit/{id}", HandlerFunc: propertyHandler.EditPropertyPage, Middlewares: []mux.MiddlewareFunc{authMiddleware}},
+		{Path: "POST /properties/edit/{id}", HandlerFunc: propertyHandler.EditPropertyAction, Middlewares: []mux.MiddlewareFunc{authMiddleware}},
+		{Path: "DELETE /properties/delete/{id}", HandlerFunc: propertyHandler.DeleteProperty, Middlewares: []mux.MiddlewareFunc{authMiddleware}},
 	}
 
 	muxer := mux.Setup(
@@ -206,6 +207,30 @@ func trackerCorsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content, Content-Type, Origin")
 		w.Header().Set("Access-Control-Allow-Credentials", "false")
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var (
+			err     error
+			session *sessions.Session
+		)
+
+		slog.Debug("authMiddleware", "request", r.URL.Path)
+
+		if session, err = store.Get(r, "aletics_session"); err != nil {
+			slog.Error("error retrieving session in authMiddleware", "error", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		if _, ok := session.Values["authenticated"]; !ok {
+			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})

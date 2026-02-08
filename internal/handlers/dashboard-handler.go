@@ -13,18 +13,23 @@ import (
 	"github.com/adampresley/aletics/internal/viewdata"
 	"github.com/adampresley/httphelpers/requests"
 	"github.com/adampresley/rendering"
+	"github.com/gorilla/sessions"
 )
 
 type DashboardHandler struct {
 	propertyService *services.PropertyService
 	reportService   *services.ReportService
 	renderer        rendering.TemplateRenderer
+	serverPassword  string
+	store           *sessions.CookieStore
 }
 
 type DashboardHandlerConfig struct {
 	PropertyService *services.PropertyService
 	ReportService   *services.ReportService
 	Renderer        rendering.TemplateRenderer
+	ServerPassword  string
+	Store           *sessions.CookieStore
 }
 
 func NewDashboardHandler(config DashboardHandlerConfig) *DashboardHandler {
@@ -32,7 +37,96 @@ func NewDashboardHandler(config DashboardHandlerConfig) *DashboardHandler {
 		propertyService: config.PropertyService,
 		reportService:   config.ReportService,
 		renderer:        config.Renderer,
+		serverPassword:  config.ServerPassword,
+		store:           config.Store,
 	}
+}
+
+func (h *DashboardHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
+	pageName := "pages/login"
+
+	viewData := viewdata.Login{
+		BaseViewModel: rendering.BaseViewModel{
+			IsHtmx: requests.IsHtmx(r),
+		},
+		Password: "",
+	}
+
+	h.renderer.Render(pageName, viewData, w)
+}
+
+func (h *DashboardHandler) LoginAction(w http.ResponseWriter, r *http.Request) {
+	var (
+		err     error
+		session *sessions.Session
+	)
+
+	pageName := "pages/login"
+
+	viewData := viewdata.Login{
+		BaseViewModel: rendering.BaseViewModel{
+			IsHtmx: requests.IsHtmx(r),
+		},
+		Password: requests.Get[string](r, "password"),
+	}
+
+	if viewData.Password != h.serverPassword {
+		ip := services.GetIP(r)
+		slog.Error("invalid loginn attempt", "ip", ip)
+
+		viewData.IsError = true
+		viewData.Message = "Invalid password"
+
+		h.renderer.Render(pageName, viewData, w)
+		return
+	}
+
+	if session, err = h.store.Get(r, "aletics_session"); err != nil {
+		slog.Error("error getting session", "error", err)
+
+		viewData.IsError = true
+		viewData.Message = "An unexpected error occurred while validating your password. Please try again"
+
+		h.renderer.Render(pageName, viewData, w)
+		return
+	}
+
+	session.Values["authenticated"] = true
+
+	if err = session.Save(r, w); err != nil {
+		slog.Error("error saving session", "error", err)
+
+		viewData.IsError = true
+		viewData.Message = "An unexpected error occurred while validating your password. Please try again"
+
+		h.renderer.Render(pageName, viewData, w)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (h *DashboardHandler) LogoutAction(w http.ResponseWriter, r *http.Request) {
+	var (
+		err     error
+		session *sessions.Session
+	)
+
+	if session, err = h.store.Get(r, "aletics_session"); err != nil {
+		slog.Error("error getting session", "error", err)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	session.Options.MaxAge = -1
+
+	if err = session.Save(r, w); err != nil {
+		slog.Error("error saving session", "error", err)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request) {

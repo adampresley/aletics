@@ -1,0 +1,16 @@
+{{template "layouts/login-layout" .}}
+{{define "title"}}Login{{end}}
+{{define "content"}}
+
+{{if .IsError}}
+<article class="error">
+   {{.Message}}
+</article>
+{{end}}
+
+<form action="/login" method="POST">
+   <input type="password" name="password" id="password" placeholder="Password" aria-label="Password" required />
+   <input type="submit" value="Login" />
+</form>
+
+{{end}}

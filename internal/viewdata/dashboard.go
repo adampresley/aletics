@@ -24,3 +24,8 @@ type Dashboard struct {
 	ViewsOverTimeLabelsJSON template.JS
 	ViewsOverTimeDataJSON   template.JS
 }
+
+type Login struct {
+	rendering.BaseViewModel
+	Password string
+}
