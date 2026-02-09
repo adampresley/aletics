@@ -7,7 +7,7 @@ require (
 	github.com/adampresley/httphelpers v1.1.3
 	github.com/adampresley/mux v1.0.0
 	github.com/adampresley/rendering v1.0.0
-	github.com/adampresley/rester v1.1.0
+	github.com/adampresley/rester v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.4.0
 	github.com/jellydator/ttlcache/v3 v3.4.0

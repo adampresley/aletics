@@ -6,8 +6,8 @@ github.com/adampresley/mux v1.0.0 h1:eXUiOafEsMqkUKvO9+DH9FVYJM5Kiqri7LfIHAsNi1g
 github.com/adampresley/mux v1.0.0/go.mod h1:6tEN2tqstdjehwTMFO6wETNXyaFTbrfu0fyg0FeCfBk=
 github.com/adampresley/rendering v1.0.0 h1:00y1jQSkS8kII9Pyrkz02OYRoW9SZYanCZPtvhrfEB4=
 github.com/adampresley/rendering v1.0.0/go.mod h1:+M8aNRgIEibWYOA2lDAWsJ9zWhOoWgT7d+w86FJ/3mc=
-github.com/adampresley/rester v1.1.0 h1:31836ERTfyOgwwdSmyRachjKpGpXopAZ2eHMAcP4q1w=
-github.com/adampresley/rester v1.1.0/go.mod h1:0IOHaBgnm9YM4VE+1UeXbhHCGqYZAZHt0/o+jCBbeGw=
+github.com/adampresley/rester v1.2.0 h1:KvhQaTbhHRbmufXyWEDra/7Cw6+ce547E11mwtJOow4=
+github.com/adampresley/rester v1.2.0/go.mod h1:0IOHaBgnm9YM4VE+1UeXbhHCGqYZAZHt0/o+jCBbeGw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"os"
@@ -101,6 +102,9 @@ func main() {
 	restConfig := clientoptions.New(
 		services.MaxmindBaseUrl,
 		clientoptions.WithBasicAuth(config.MaxmindAccountID, config.MaxmindApiKey),
+		clientoptions.WithCustomContentTypeHandler("application/vnd.maxmind.com-country+json", func(body []byte, result any) error {
+			return json.Unmarshal(body, result)
+		}),
 	)
 
 	ipLookupService := services.NewIpLookupService(services.IpLookupServiceConfig{
