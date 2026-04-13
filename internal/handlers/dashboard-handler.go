@@ -189,6 +189,8 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 			slog.Error("error getting views over time", "error", err)
 		}
 
+		viewData.ViewsOverTime = fillMissingDataPoints(viewData.ViewsOverTime, start, end, timeframe)
+
 		if viewData.TopPaths, err = h.reportService.GetTopPaths(selectedPropertyID, start, end); err != nil {
 			slog.Error("error getting top paths", "error", err)
 		}
@@ -206,7 +208,7 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 	 * Prepare data for Chart.js
 	 */
 	for _, item := range viewData.ViewsOverTime {
-		viewsOverTimeLabels = append(viewsOverTimeLabels, item.Label)
+		viewsOverTimeLabels = append(viewsOverTimeLabels, formatChartLabel(item.Label, timeframe))
 		viewsOverTimeData = append(viewsOverTimeData, item.Count)
 	}
 
@@ -222,27 +224,128 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 }
 
 func calculateDateRange(timeRange string) (time.Time, time.Time, string) {
-	end := time.Now()
-	var start time.Time
-	timeframe := "daily"
+	var (
+		end       time.Time
+		start     time.Time
+		timeframe string
+		today     time.Time
+		yesterday time.Time
+	)
+
+	end = time.Now()
+	timeframe = "daily"
+	today = time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
 
 	switch timeRange {
 	case "24h":
 		start = end.Add(-24 * time.Hour)
 		timeframe = "hourly"
 	case "1d":
-		yesterday := end.AddDate(0, 0, -1)
-		start = time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, yesterday.Location())
+		yesterday = today.AddDate(0, 0, -1)
+		start = yesterday
 		end = time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 23, 59, 59, 0, yesterday.Location())
 		timeframe = "hourly"
 	case "30d":
-		start = end.AddDate(0, -1, 0)
+		start = today.AddDate(0, 0, -29)
 	case "6m":
-		start = end.AddDate(0, -6, 0)
-	case "7d":
-	default:
-		start = end.AddDate(0, 0, -7)
+		start = today.AddDate(0, -6, 0)
+	default: // includes "7d"
+		start = today.AddDate(0, 0, -6)
 	}
 
 	return start, end, timeframe
+}
+
+func parseLabelTime(label string) (time.Time, bool) {
+	var (
+		formats = []string{
+			time.RFC3339,
+			"2006-01-02T15:04:05+00:00",
+			"2006-01-02 15:04:05+00:00",
+			"2006-01-02 15:04:05+00",
+			"2006-01-02 15:04",
+			"2006-01-02",
+		}
+		t   time.Time
+		err error
+	)
+
+	for _, format := range formats {
+		if t, err = time.Parse(format, label); err == nil {
+			return t, true
+		}
+	}
+
+	return time.Time{}, false
+}
+
+func formatChartLabel(label, timeframe string) string {
+	var (
+		t  time.Time
+		ok bool
+	)
+
+	t, ok = parseLabelTime(label)
+	if !ok {
+		return label
+	}
+
+	if timeframe == "hourly" {
+		return t.Format("Jan 2 15:04")
+	}
+
+	return t.Format("Jan 2")
+}
+
+func fillMissingDataPoints(items []models.ViewsOverTimeItem, start, end time.Time, timeframe string) []models.ViewsOverTimeItem {
+	var (
+		existing map[string]int
+		result   []models.ViewsOverTimeItem
+		startUTC time.Time
+		endUTC   time.Time
+		endDay   time.Time
+		current  time.Time
+		key      string
+		t        time.Time
+		ok       bool
+	)
+
+	existing = make(map[string]int)
+	result = make([]models.ViewsOverTimeItem, 0)
+	startUTC = start.UTC()
+	endUTC = end.UTC()
+
+	for _, item := range items {
+		t, ok = parseLabelTime(item.Label)
+		if !ok {
+			continue
+		}
+
+		if timeframe == "hourly" {
+			key = t.UTC().Format("2006-01-02 15:00")
+		} else {
+			key = t.UTC().Format("2006-01-02")
+		}
+
+		existing[key] = item.Count
+	}
+
+	if timeframe == "hourly" {
+		current = time.Date(startUTC.Year(), startUTC.Month(), startUTC.Day(), startUTC.Hour(), 0, 0, 0, time.UTC)
+		for !current.After(endUTC) {
+			key = current.Format("2006-01-02 15:00")
+			result = append(result, models.ViewsOverTimeItem{Label: key, Count: existing[key]})
+			current = current.Add(time.Hour)
+		}
+	} else {
+		current = time.Date(startUTC.Year(), startUTC.Month(), startUTC.Day(), 0, 0, 0, 0, time.UTC)
+		endDay = time.Date(endUTC.Year(), endUTC.Month(), endUTC.Day(), 0, 0, 0, 0, time.UTC)
+		for !current.After(endDay) {
+			key = current.Format("2006-01-02")
+			result = append(result, models.ViewsOverTimeItem{Label: key, Count: existing[key]})
+			current = current.AddDate(0, 0, 1)
+		}
+	}
+
+	return result
 }
