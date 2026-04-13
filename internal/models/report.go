@@ -29,3 +29,16 @@ type CountryCountItem struct {
 	Country string `json:"country"`
 	Count   int    `json:"count"`
 }
+
+// JourneyEdge represents a direct page-to-page transition and how many times it occurred.
+type JourneyEdge struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
+	Value  int    `json:"value"`
+}
+
+// TopJourneyPath represents a full multi-page session sequence and how many sessions followed it.
+type TopJourneyPath struct {
+	Sequence string `json:"sequence"`
+	Count    int    `json:"count"`
+}

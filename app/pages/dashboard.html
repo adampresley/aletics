@@ -103,11 +103,43 @@
       </article>
    </div>
 
+   <article>
+      <h4>User Journey</h4>
+      {{if .JourneyEdges}}
+      <div id="journeySankeyContainer" style="width: 100%; min-height: 400px;"></div>
+      {{else}}
+      <p><small>No session data available yet. Journey data will appear once visitors begin navigating between pages.</small></p>
+      {{end}}
+   </article>
+
+   {{if .TopJourneyPaths}}
+   <article>
+      <h4>Top Paths</h4>
+      <table>
+         <thead>
+            <tr>
+               <th>Sequence</th>
+               <th>Sessions</th>
+            </tr>
+         </thead>
+         <tbody>
+            {{range .TopJourneyPaths}}
+            <tr>
+               <td>{{.Sequence}}</td>
+               <td>{{.Count}}</td>
+            </tr>
+            {{end}}
+         </tbody>
+      </table>
+   </article>
+   {{end}}
+
    <script src="/static/js/pages/dashboard.js" type="module"></script>
    <script type="module">
       const init = () => {
          window.initDashboard({{.ViewsOverTimeLabelsJSON}}, {{.ViewsOverTimeDataJSON}});
-   };
+         window.renderJourneySankey('journeySankeyContainer', {{.JourneyEdgesJSON}});
+      };
 
       document.addEventListener('DOMContentLoaded', init);
       document.addEventListener("htmx:afterSettle", init);

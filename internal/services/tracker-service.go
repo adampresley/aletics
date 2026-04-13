@@ -72,6 +72,7 @@ func (s *TrackerService) TrackEvent(newEvent models.NewEvent) (*models.Event, er
 		CountryCode:   newEvent.CountryCode,
 		Continent:     newEvent.Continent,
 		ContinentCode: newEvent.ContinentCode,
+		SessionID:     newEvent.SessionID,
 	}
 
 	err = s.db.Create(event).Error

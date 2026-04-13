@@ -15,6 +15,7 @@ type Event struct {
 	CountryCode   string `json:"countryCode"`
 	Continent     string `json:"continent"`
 	ContinentCode string `json:"continentCode"`
+	SessionID     string `json:"sessionId"`
 }
 
 type NewEvent struct {
@@ -28,4 +29,5 @@ type NewEvent struct {
 	CountryCode   string `json:"-"`
 	Continent     string `json:"-"`
 	ContinentCode string `json:"-"`
+	SessionID     string `json:"sessionId"`
 }

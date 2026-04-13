@@ -143,6 +143,7 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 		viewsOverTimeData     = make([]int, 0)
 		viewsOverTimeJSON     []byte
 		viewsOverTimeDataJSON []byte
+		journeyEdgesJSON      []byte
 	)
 
 	/*
@@ -202,6 +203,14 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 		if viewData.CountryCounts, err = h.reportService.GetCountryCounts(selectedPropertyID, start, end); err != nil {
 			slog.Error("error getting country counts", "error", err)
 		}
+
+		if viewData.JourneyEdges, err = h.reportService.GetJourneyEdges(selectedPropertyID, start, end); err != nil {
+			slog.Error("error getting journey edges", "error", err)
+		}
+
+		if viewData.TopJourneyPaths, err = h.reportService.GetTopJourneyPaths(selectedPropertyID, start, end); err != nil {
+			slog.Error("error getting top journey paths", "error", err)
+		}
 	}
 
 	/*
@@ -218,6 +227,10 @@ func (h *DashboardHandler) DashboardPage(w http.ResponseWriter, r *http.Request)
 
 	if viewsOverTimeDataJSON, err = json.Marshal(viewsOverTimeData); err == nil {
 		viewData.ViewsOverTimeDataJSON = template.JS(viewsOverTimeDataJSON)
+	}
+
+	if journeyEdgesJSON, err = json.Marshal(viewData.JourneyEdges); err == nil {
+		viewData.JourneyEdgesJSON = template.JS(journeyEdgesJSON)
 	}
 
 	h.renderer.Render(pageName, viewData, w)
